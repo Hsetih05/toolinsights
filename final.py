@@ -5,7 +5,8 @@ import plotly_express as px
 import pandas as pd 
 st.set_option('deprecation.showfileUploaderEncoding', False)
 st.sidebar.subheader("File Uploader")
-uploaded_file = st.sidebar.file_uploader(label="upload your csv file or excel file.", type = ['csv', 'xlsx'])
+uploaded_file = st.sidebar.file_uploader(label="upload your Main csv file or excel file.", type = ['csv', 'xlsx'])
+multiple_file = st.sidebar.file_uploader('Experiment File upload', type=['csv','xlsx'],accept_multiple_files=True)
 st.title('Tool Insights')
 original_list = ['Home','Tool Wear Detection', 'Tool Wear Prediction', 'Tool Performance', 'Outlier Detection','Tool Detection','Data Analysis','Tips',]
 result = st.selectbox('Select Your Option', original_list)
@@ -15,6 +16,7 @@ if result == 'Home':
     global df
     if uploaded_file is not None:
         st.write(uploaded_file)
+        st.write(multiple_file)
 
     else:
         st.subheader("Please upload file to the application")
@@ -43,7 +45,7 @@ if result == 'Tool Detection':
     from tensorflow import keras
 
     from sklearn.metrics import accuracy_score,f1_score,confusion_matrix
-    train=pd.read_csv('E:/hset/New folder/train.csv')
+    train=pd.read_csv(uploaded_file)
     train.shape
     train.columns
 
@@ -104,7 +106,12 @@ if result == 'Tool Detection':
     frames=list()
     for i in range(1,19):
         exp = '0' + str(i) if i < 10 else str(i)
-        frame = pd.read_csv("E:/hset/New folder/experiment_{}.csv".format(exp))
+        frame = pd.read_csv(multiple_file.name)
+        for multiple_file in multiple_file:
+            bytes_data = multiple_file.read()
+            print("filename:", multiple_file.name)
+            print(bytes_data)
+        frames=list()
         row = train[train['No'] == i]
         frame['target'] = 1 if row.iloc[0]['tool_condition'] == 'worn' else 0
         frames.append(frame)
@@ -192,7 +199,7 @@ if result == 'Tool Wear Prediction':
     from sklearn.neighbors import NearestCentroid
     from sklearn.linear_model import SGDClassifier
 
-    train=pd.read_csv('E:/hset/New folder/train.csv')
+    train=pd.read_csv(uploaded_file)
 
     le1=LabelEncoder()
     le1.fit(train['material'])
@@ -223,7 +230,12 @@ if result == 'Tool Wear Prediction':
     frames = []
     for i in range(1,19):
         ex_num = '0' + str(i) if i < 10 else str(i)
-        frame = pd.read_csv("E:/hset/New folder/experiment_{}.csv".format(ex_num))
+        for multiple_file in multiple_file:
+            bytes_data = multiple_file.read()
+            print("filename:", multiple_file.name)
+            print(bytes_data)
+        frames=list()
+        frame = pd.read_csv(multiple_file.name)
 
         ex_result_row = train[train['No'] == i]
         
@@ -477,22 +489,25 @@ if result == 'Outlier Detection':
     import seaborn as sns
 
     import os
-    for dirname, _, filenames in os.walk('E:/hset/New folder/'):
-        for filename in filenames:
-            print(os.path.join(dirname, filename))
+   
     import warnings
     warnings.filterwarnings("ignore", category=FutureWarning)
-    main_df=pd.read_csv('E:/hset/New folder/train.csv')  
+    main_df=pd.read_csv(uploaded_file)  
     main_df=main_df.fillna('no')
     main_df.head()
     import glob
     #set working directory
-    os.chdir('E:/hset/New folder/')
+    
     files = list()
 
     for i in range(1,19):
         exp_number = '0' + str(i) if i < 10 else str(i)
-        file = pd.read_csv("E:/hset/New folder/experiment_{}.csv".format(exp_number))
+        for multiple_file in multiple_file:
+            bytes_data = multiple_file.read()
+            print("filename:", multiple_file.name)
+            print(bytes_data)
+        frames=list()
+        file = pd.read_csv(multiple_file.name)
         row = main_df[main_df['No'] == i]
     
         #add experiment settings to features
@@ -650,8 +665,8 @@ if result == 'Outlier Detection':
 
 
 
-if result == 'Tool analysis':
-    st.subheader('Tool analysis')
+if result == 'Tool Performance':
+    st.subheader('Tool Performance')
 
     from pprint import pprint
 
@@ -672,8 +687,8 @@ if result == 'Tool analysis':
     from sklearn.preprocessing import MinMaxScaler
     from sklearn.decomposition import PCA
 
-    data_dir = 'E:/hset/New folder/'
-    outcomes = pd.read_csv(data_dir + 'train.csv')
+    
+    outcomes = pd.read_csv(uploaded_file)
     outcomes.info()
     
     part_out = outcomes[outcomes['passed_visual_inspection'].notna()]
@@ -683,7 +698,18 @@ if result == 'Tool analysis':
     wear = part_out.tool_condition.eq('unworn').mul(1)
 
     st.write('\nPearson correlation coefficient: {:.2f}'.format(matthews_corrcoef(passed, wear)))
-    experiment1 = pd.read_csv(data_dir + 'experiment_01.csv')
+    all_filenmae = (multiple_file)
+    
+   
+    for multiple_file in multiple_file:
+        bytes_data = multiple_file.read()
+        print("filename:", multiple_file.name)
+        print(bytes_data)
+    frames=list()
+   
+    experiment1 = pd.read_csv(multiple_file.name)
+    
+    
     experiment1.reset_index(inplace=True)
     experiment1.info()
 
@@ -825,7 +851,12 @@ if result == 'Tool analysis':
 
     # Worn data
     # Load data
-    experiment6 = pd.read_csv(data_dir + 'experiment_06.csv')
+    for multiple_file in multiple_file:
+        bytes_data = multiple_file.read()
+        print("filename:", multiple_file.name)
+        print(bytes_data)
+    frames=list()
+    experiment6 = pd.read_csv(multiple_file.name )
     experiment6.reset_index(inplace=True)
 
     # Clean up data
@@ -951,7 +982,12 @@ if result == 'Tool analysis':
 
     fig.show()
 
-    # Collect columns that are desireable in further analysis
+
+
+
+
+
+# Collect columns that are desireable in further analysis
     keeper_cols = list(filter(lambda x: 'Z1' not in x, raw_cols))
 
     # Define number of PCA components
@@ -966,7 +1002,12 @@ if result == 'Tool analysis':
 
 
     # Load another dataset - worn
-    experiment8 = pd.read_csv(data_dir + 'experiment_08.csv')
+    for multiple_file in multiple_file:
+        bytes_data = multiple_file.read()
+        print("filename:", multiple_file.name)
+        print(bytes_data)
+    frames=list()
+    experiment8 = pd.read_csv(multiple_file.name)
     experiment8.reset_index(inplace=True)
 
     # Clean up data
@@ -983,7 +1024,12 @@ if result == 'Tool analysis':
 
 
     # Load another dataset - unworn
-    experiment3 = pd.read_csv(data_dir + 'experiment_03.csv')
+    for multiple_file in multiple_file:
+        bytes_data = multiple_file.read()
+        print("filename:", multiple_file.name)
+        print(bytes_data)
+    frames=list()
+    experiment3 = pd.read_csv(multiple_file.name)
     experiment3.reset_index(inplace=True)
 
     # Clean up data
@@ -1036,18 +1082,23 @@ if result == 'Tool analysis':
     idx_worn = []
     for i, r in completed_exper.iterrows():
         if r['tool_condition'] == 'unworn':
+            for multiple_file in multiple_file:
+                bytes_data = multiple_file.read()
+                print("filename:", multiple_file.name)
+                print(bytes_data)
+            frames=list()
             if r['No'] < 10:
-                unw_data = pd.read_csv(data_dir + 'experiment_0{}.csv'.format(r['No']))
+                unw_data = pd.read_csv(multiple_file.name)
             else:
-                unw_data = pd.read_csv(data_dir + 'experiment_{}.csv'.format(r['No']))
+                unw_data = pd.read_csv(multiple_file.name)
                 unw_data['Experiment'] = r['No']
             unworn.append(unw_data)
             idx_unworn.append(r['No'])
         elif r['tool_condition'] == 'worn':
             if r['No'] < 10:
-                w_data = pd.read_csv(data_dir + 'experiment_0{}.csv'.format(r['No']))
+                w_data = pd.read_csv(multiple_file.name)
             else:
-                w_data = pd.read_csv(data_dir + 'experiment_{}.csv'.format(r['No']))
+                w_data = pd.read_csv(multiple_file.name)
             w_data['Experiment'] = r['No']
             worn.append(w_data)
             idx_worn.append(r['No'])
@@ -1088,6 +1139,7 @@ if result == 'Tool analysis':
     fig.update_shapes(dict(xref='x', yref='y'))
     fig.update_layout(title_text='Mahalanobis Distance Trance All Unworn Data')
     fig.show()
+
 
 
     unworn_test = pd.DataFrame(unworn_pca)
@@ -1143,6 +1195,9 @@ if result == 'Tool analysis':
 
 
 
+    
+
+
 if result == 'Tool Wear Detection':
     st.subheader('Tool Wear Detection')
     import numpy as np
@@ -1156,11 +1211,17 @@ if result == 'Tool Wear Detection':
     from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
     import warnings
     warnings.filterwarnings("ignore", category=FutureWarning)
+    
     frames = list()
-    results = pd.read_csv("E:/hset/New folder/train.csv") 
+    results = pd.read_csv(uploaded_file) 
     for i in range(1,19):
         exp = '0' + str(i) if i < 10 else str(i)
-        frame = pd.read_csv("E:/hset/New folder/experiment_{}.csv".format(exp))
+        for multiple_file in multiple_file:
+            bytes_data = multiple_file.read()
+            print("filename:", multiple_file.name)
+            print(bytes_data)
+        frames=list()
+        frame = pd.read_csv(multiple_file.name)
         row = results[results['No'] == i]
         frame['target'] = 1 if row.iloc[0]['tool_condition'] == 'worn' else 0
         frames.append(frame)
@@ -1330,12 +1391,11 @@ if result == 'Data Analysis':
     sns.set(rc = {'figure.figsize':(30,16)})
     import os
     experiments = []
-    for dirname, _, filenames in os.walk('E:/hset/New folder/'):
-        for filename in filenames:
-            if filename.startswith('experiment'):
-                df = pd.read_csv(f"{dirname}/{filename}", index_col=None, header=0)
-                df['Experiment'] = int(filename[-6:-4])
-                experiments.append(df)
+    for multiple_file.name in multiple_file.name:
+        if multiple_file.name.startswith('experiment'):
+            df = pd.read_csv(multiple_file.name , index_col=None, header=0)
+            df['Experiment'] = int(multiple_file.name[-6:-4])
+            experiments.append(df)
             
     series = pd.concat(experiments, axis=0, ignore_index=True)
 
@@ -1349,16 +1409,22 @@ if result == 'Data Analysis':
     series['Velocity'] = np.sqrt(series['X1_ActualVelocity'] ** 2 + series['Y1_ActualVelocity'] ** 2+ series['Z1_ActualVelocity'] ** 2)
     series['Velocity'].plot() # all steps - including preparation etc.
     series[series.Milling]['Velocity'].plot()# only milling steps
-    
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(20,18))
     sns.scatterplot(data=series[series.Milling], x='X1_ActualPosition', y='Y1_ActualPosition', hue='Velocity', size='Velocity', sizes=(100, 300));
     sns.heatmap(series.corr());
+    st.pyplot(plt)
     milling_pwr = series[series.Milling]['S1_OutputPower'].mean()
     not_milling_pwr = series[series.Milling == False]['S1_OutputPower'].mean()
     st.write('Milling pwr average:' + str(milling_pwr))
     st.write('Not Milling pwr average:' + str(not_milling_pwr))
     pct = milling_pwr / not_milling_pwr * 100
     pct
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(20,18))
     sns.scatterplot(data=series, x='Machining_Process', y='S1_OutputPower');
+    st.pyplot(plt)
+
 
 
 
